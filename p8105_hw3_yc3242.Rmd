@@ -413,5 +413,5 @@ tmax_tmin + d_snow
 ```
 
 Left plot of this two-panel figure shows the joint distribution of maximum and minimum temperature. It tells us that most days have maximum 25°C and minimum 15°C temperature during 1981 - 2010. Also, the general temperature range in NY seems to be -15°C/0°C to 20°C/30°C.
-Right plot indicates that normal amount of snowfall is 0 ~ 25mm and sometimes NY have 50 and 75mm snowfall.  
+Right plot indicates that normal amount of snowfall is 0 ~ 25mm and sometimes NY have 50 and 75mm snowfall. In addition, distribution of snowfall is similar by year. 
 
