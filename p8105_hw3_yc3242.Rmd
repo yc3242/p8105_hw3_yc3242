@@ -5,18 +5,10 @@ date: "October 10, 2018"
 output: github_document
 ---
 
-I used the tidyverse library and some options for outset through the whole problem set.
+I used the tidyverse library through the whole problem set.
 
 ```{r}
 library(tidyverse)
-
-knitr::opts_chunk$set(
-  # fig.width = 6,
-  # fig.asp = .6,
-  out.width = "90%"
-)
-
-theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
 
 
@@ -35,10 +27,10 @@ Next, I cleaned the data and focused on the `Overall Health` topic and organized
 response_levels = c("Excellent", "Very good", "Good", "Fair", "Poor")
 
 brfss_smart2010 = brfss_smart2010 %>% 
-  janitor::clean_names() %>%                          # clean variable names
+  janitor::clean_names() %>%                         
   rename(state = locationabbr,
          location = locationdesc) %>% 
-  filter(topic == "Overall Health") %>% 
+  filter(topic == "Overall Health") %>%           
   mutate(response = factor(response, levels = response_levels))
 ```
 
@@ -54,31 +46,60 @@ brfss_smart2010 %>%
 
 In 2002, **CT, FL, NC** were observed at 7 locations.
 
-Next, I made a “spaghetti plot” that shows the number of locations in each state from 2002 to 2010.
+Next, I made a spaghetti plot that shows the number of locations in each state from 2002 to 2010.
 
-```{r location_2002_2010}
+```{r location_2002_2010, fig.width = 6, fig.asp = .6, out.width = "90%"}
 brfss_smart2010 %>% 
   group_by(state, year) %>%
   distinct(location) %>%
   mutate(n_location = n()) %>% 
-  ggplot(aes(x = year, y = n_location)) +
-  geom_line(aes(color = state)) +
-  labs(
-    title = "Number of locations across states from 2002 to 2010",
-    x = "Year",
-    y = "Number of locations"
-  ) +
-  theme(plot.title = element_text(size = 16),
-        legend.key.width = unit(.3, "cm"),
-        legend.text = element_text(size = 7)) +
-  guides(color = guide_legend(ncol = 17)) +
+  ggplot(aes(x = year, y = n_location, color = state)) +
+   geom_line(alpha = 0.4) +
+   labs(
+     title = "Number of locations across states from 2002 to 2010",
+     x = "Year",
+     y = "Number of locations"
+     ) +
   viridis::scale_color_viridis(
     name = "State",
     discrete = TRUE
-    ) 
+    ) +
+  theme(plot.title = element_text(size = 12),
+        legend.position = "bottom",
+        legend.key.width = unit(.3, "cm"),
+        legend.text = element_text(size = 7)) +
+  guides(color = guide_legend(ncol = 17)) 
 ```
 
-This spaghetti plot shows that from 2002 to 2010, the number of locations of state seems constant, slightly fluctuating below 20 except that there is a huge surge in 2007 and 2010 in Florida.  
+This spaghetti plot shows that from 2002 to 2010, the number of locations of state seems constant, slightly fluctuating below 20. However, this plot is not readable since many lines are overlapped. Thus, I re-plotted with a subset of some states whose maximum number of location is greater than 15.
+
+```{r location_2002_2010, fig.width = 6, fig.asp = .6, out.width = "90%"}
+brfss_smart2010 %>% 
+  group_by(state, year) %>%
+  distinct(location) %>%
+  summarize(n_location = n()) %>% 
+  group_by(state) %>% 
+  mutate(max_n_location = max(n_location)) %>% 
+  filter(max_n_location > 15) %>% 
+  ggplot(aes(x = year, y = n_location, color = state)) +
+   geom_line(alpha = 0.7) +
+   labs(
+     title = "Number of locations across states from 2002 to 2010",
+     x = "Year",
+     y = "Number of locations",
+     caption = "subset of data above"
+     ) +
+  viridis::scale_color_viridis(
+    name = "State",
+    discrete = TRUE
+    ) +
+  theme(plot.title = element_text(size = 12),
+        legend.position = "bottom",
+        legend.key.width = unit(.5, "cm"),
+        legend.text = element_text(size = 9)) 
+```
+
+From this plot, I can not only see that there was a surge in number of locations in FL in 2007 and 2010 but NC, NJ and TX have generally more locations than other states. 
 
 Also, I made a table showing, for the years 2002, 2006, and 2010, the mean and standard deviation of the proportion of “Excellent” responses across locations in NY State.
 
@@ -97,31 +118,30 @@ The average and deviation of the proportion of Excellent responses across locati
 
 For each year and state, I computed the average proportion in each response category (taking the average across locations in a state) and made a five-panel plot that shows, for each response category separately, the distribution of these state-level averages over time.
 
-```{r}
+```{r fig.width = 6, fig.asp = .6, out.width = "90%"}
 brfss_smart2010 %>% 
   group_by(year, state, response) %>% 
   summarize(mean_response = mean(data_value)) %>% 
   ggplot(aes(x = factor(year), y = mean_response)) +     
-  geom_violin(aes(fill = factor(year))) +
-  stat_summary(fun.y = mean, geom = "point", color = "black") +
-  facet_grid( ~ response) +
-  labs(
-    x = "Year",
-    y = "Average proportion(%)",
-    title = "Average proportion in each response category from 2002 to 2010"
-  ) +
- theme(plot.title = element_text(size = 16),
-        legend.key.width = unit(.3, "cm"),
-        legend.text = element_text(size = 7),
-       axis.text.x = element_text(size = 5),
-       legend.position = "none") +
-  guides(color = guide_legend(ncol = 17)) +
+    geom_violin(aes(fill = factor(year))) +
+    stat_summary(fun.y = mean, geom = "point", color = "black") +
+    facet_grid( ~ response) +
+    labs(
+      x = "Year",
+      y = "Average proportion(%)",
+      title = "Average proportion in each response category from 2002 to 2010"
+    ) +
   viridis::scale_fill_viridis(
     name = "State",
-    discrete = TRUE) 
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, size = 9),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "none") 
 ```
 
-Given that for every category, the plots by state are overlapped, we can conclude that the trend of responses is similar across states. The mean of average proportion is ordered as Very good > Good > Excellent > Fair > Poor from the highest and the lowest.  
+The mean (black point in the plot) of average proportion is ordered as Very good > Good > Excellent > Fair > Poor from the highest and the lowest. While the mean of average proportion of responses has some gaps between response categories over years, it is similar over time within the category. The poor category seems to have small deviations.        
 
 
 # Problem 2
@@ -183,9 +203,9 @@ instacart %>%
   knitr::kable()
 ```
 
-* **[Question]** There are **`r instacart %>% distinct(aisle) %>% count()`** aisles in the dataset. 
+* There are **`r instacart %>% distinct(aisle) %>% count()`** aisles in the dataset. 
 
-* **[Question]** The aisles below are the most items ordered from. 
+* The aisles below are the most items ordered from. 
 
 ```{r}
 instacart %>% 
@@ -196,20 +216,21 @@ instacart %>%
 
 A plot below shows the number of items ordered in each aisle. 
 
-```{r}
+```{r fig.height = 10}
 instacart %>%
   count(aisle) %>% 
   mutate(aisle = forcats::fct_reorder(aisle, n, .asc = TRUE)) %>% 
   ggplot(aes(x = aisle, y = n)) + 
   geom_bar(stat = "identity",                 ## bar represents values not count
-           size = .1,
+           width = .3,
            fill = "#E69F00") +
   labs(title = "Number of items ordered in each aisle",
-       x = "Number of orders",
-       y = "Aisle") +
-  theme(axis.text.y = element_text(hjust = 1)) +
-  coord_flip() +
-  knitr::opts_chunk$set(fig.height = 20)
+       x = "Aisle",
+       y = "Number of orders") +
+  theme(plot.title = element_text(size = 12),
+        axis.text.y = element_text(hjust = 1),
+        axis.text = element_text(size = 7.5)) +
+  coord_flip()
 ```
 
 As shown above, fresh vegetables, fresh fruits and packaged vegetables fruits are the top 3 popular items. Beauty, frozen juice and baby accessories are the least purchased items. 
@@ -230,19 +251,19 @@ instacart %>%
   knitr::kable()
 ```
 
-Light brown sugar, snack sticks chicken & rice recipe dog treats and organic baby spinach are the most purchased item in baking ingredients, dog food care and packaged vegetables fruits aisle, respectively. Even though these products are the most popular item in each aisle, there is a huge gap between the number of orders.   
+Light brown sugar, snack sticks chicken & rice recipe dog treats and organic baby spinach are the most purchased item in baking ingredients, dog food care and packaged vegetables fruits aisle, respectively. Even though these products are the most popular item in each aisle, the number of orders are different from each other. 
 
-A table below shows the mean hour of the day with the scale of 24-hour clock at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. For more readable visualization, I converted numeric `order_dow` variable to characteristic `days_of_the_week` variable in a way that from `0` to `6` to from `Sunday` to `Saturday`.
+A table below shows the mean hour of the day with the scale of 24-hour clock at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. For more readable table, I converted numeric `order_dow` variable to characteristic `days_of_the_week` variable in a way that from `0` to `6` to from `Sunday` to `Saturday`.
 
 ```{r}
-days_of_the_week = 
+dow_names = 
   c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
 instacart %>%
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
   group_by(product_name, order_dow) %>% 
   summarize(mean_order_hod = round(mean(order_hour_of_day), 1)) %>% 
-  mutate(order_dow = factor(days[order_dow + 1], levels = days_of_the_week)) %>% 
+  mutate(order_dow = factor(dow_names[order_dow + 1], levels = dow_names)) %>% 
   spread(key = order_dow, value = mean_order_hod) %>% 
   rename("Product name" = product_name) %>% 
   knitr::kable()
@@ -268,73 +289,113 @@ This `ny_noaa` data has **`r nrow(ny_noaa)`** rows and **`r ncol(ny_noaa)`** col
 * `tmax`: Maximum temperature (tenths of degrees C)
 * `tmin`: Minimum temperature (tenths of degrees C)
 
-First, I did some data cleaning by creating separate variables for year, month, and day. Also, I entered omitted decimal points on `prcp`, `tmax` and `tmin` variables. 
+First, I did some data cleaning by creating separate variables for year, month, and day and converted their variable types. Also, I entered omitted decimal points on `prcp`, `tmax` and `tmin` variables.
 
 ```{r ny_roaa_clean}
-ny_noaa <- ny_noaa[sample(1:nrow(ny_noaa),1e05),]
-ny_noaa = 
-  ny_noaa %>% 
+ny_noaa =
+  ny_noaa %>%
   separate(date, into = c("year", "month", "day"), sep = "-") %>%
-  mutate(year = as.integer(year), 
-         month = month.name[as.integer(month)],
+  mutate(year = as.integer(year),
+         month = factor(month.name[as.integer(month)], levels = month.name),
          day = as.integer(day),
          prcp = prcp / 10,
          tmax = as.numeric(tmax) / 10,
          tmin = as.numeric(tmin) / 10)
 ```
 
-The table below indicates 0 mm as the most frequently observed value of snowfall, implying that in most of days there are no snows in NY. 
-
-```{r}
-ny_noaa %>% 
-  count(snow) %>% 
-  arrange(desc(n)) %>% 
-  top_n(3) %>% 
-  rename("Snowfall(mm)" = snow,
-         "Number of observations" = n) %>% 
-  knitr::kable()
-```
-
-Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+The table below indicates 0 mm as the most frequently observed value of snowfall, implying that in most of days there are no snows in NY.
 
 ```{r}
 ny_noaa %>%
-  filter(month %in% c("January", "July")) %>% 
-  group_by(id, year, month) %>% 
+  count(snow) %>%
+  arrange(desc(n)) %>%
+  top_n(3) %>%
+  rename("Snowfall(mm)" = snow,
+         "Number of observations" = n) %>%
+  knitr::kable()
+```
+
+Next, I made a two-panel plot showing the average max temperature in January and in July in each station across years. 
+
+```{r}
+ny_noaa %>%
+  filter(month %in% c("January", "July")) %>%
+  group_by(id, year, month) %>%
   summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>%
-  ggplot(aes(x = year, y = mean_tmax, group = id)) + 
-  geom_line(aes(color = id)) +
-  theme(legend.position = "none") +
-  facet_grid(~ month) +
+  ggplot(aes(x = year, y = mean_tmax, group = id)) +
+    geom_line(aes(color = id)) +
+    labs(
+      title = "Average max temperature in January and in July in each station",
+      x = "Year",
+      Y = "Maximum temperature(°C)"
+    ) +
+    facet_grid(~ month) +
   viridis::scale_color_viridis(
     name = "id",
     discrete = TRUE
-  )
+    ) + 
+  theme(plot.title = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, size = 10),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "none") 
 ```
 
-Finally, I made a two-panel plot showing 
-
-(i) tmax vs tmin for the full dataset  
+Since there are lots of overlapped lines which corresponding to one weather station ID,  
 
 ```{r}
+ny_noaa %>%
+  filter(month %in% c("January", "July")) %>%
+  group_by(id, year, month) %>%
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>%
+  group_by(id, month) %>% 
+  mutate(min_mean_tmax = min(mean_tmax, na.rm = TRUE)) %>% 
+  filter((min_mean_tmax < 20 & month == "July") | 
+           (min_mean_tmax < -10 & month == "January") ) %>% 
+  ggplot(aes(x = year, y = mean_tmax, group = id)) +
+    geom_line(aes(color = id)) +
+    labs(
+      title = "Average max temperature in January and in July in each station",
+      x = "Year",
+      Y = "Maximum temperature(°C)"
+    ) +
+    facet_grid(~ month) +
+  viridis::scale_color_viridis(
+    name = "id",
+    discrete = TRUE
+    ) + 
+  theme(plot.title = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, size = 10),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold")) 
+```
+Is there any observable / interpretable structure? Any outliers?
+
+
+
+Finally, I made a two-panel plot showing
+
+(i) tmax vs tmin for the full dataset
+
+```{r fig.width = 6, fig.asp = .6, out.width = "90%"}
 library(hexbin)
 
-ny_noaa %>% 
+ny_noaa %>%
   filter(!is.na(tmax),
          !is.na(tmin)) %>%
-  ggplot(aes(x = tmax, y = tmin)) + 
+  ggplot(aes(x = tmax, y = tmin)) +
   geom_hex() +
   labs(title = "Temperature from 1981-2010",
-       x = "Maximum temperature (°C)",
-       y = "Minimum temperature (°C)") 
+       x = "Maximum temperature(°C)",
+       y = "Minimum temperature(°C)")
 ```
 
 
 (ii) Distribution of snowfall values greater than 0 and less than 100 separately by year.
 
-```{r}
-ny_noaa %>% 
-  filter(snow > 0, snow < 100) %>% 
+```{r fig.width = 6, fig.asp = .6, out.width = "90%"}
+ny_noaa %>%
+  filter(snow > 0, snow < 100) %>%
   ggplot(aes(x = snow, color = factor(year))) +
   geom_density() +
   labs(
@@ -348,7 +409,20 @@ ny_noaa %>%
   guides(color = guide_legend(ncol = 15)) +
   viridis::scale_color_viridis(
     name = "Year",
-    discrete = TRUE) 
+    discrete = TRUE)
 ```
 
 To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and indicating the extent to which missing data is an issue. Then, do or answer the following (commenting on the results of each):
+
+```{r}
+ny_noaa %>%
+  summarise_at(vars(prcp:tmin), .funs = function(x) mean(is.na(x))) %>%
+  knitr::kable(digits = 2)
+
+ny_noaa %>%
+  group_by(month) %>%
+  summarise_at(vars(prcp:tmin), .funs = function(x) mean(is.na(x))) %>%
+  knitr::kable(digits = 2)
+```
+
+
