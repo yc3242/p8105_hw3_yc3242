@@ -34,9 +34,9 @@ brfss_smart2010 = brfss_smart2010 %>%
   mutate(response = factor(response, levels = response_levels))
 ```
 
-First, to find out the states which were observed at 7 locations in 2002, I retained distinct rows by state and location and counted the number of states. 
+To find out the states which were observed at 7 locations in 2002, I retained distinct rows by state and location and counted the number of states. 
 
-```{r n_locations}
+```{r n_locations_2002}
 brfss_smart2010 %>% 
   filter(year == 2002) %>%
   distinct(state, location) %>% 
@@ -46,7 +46,7 @@ brfss_smart2010 %>%
 
 In 2002, **CT, FL, NC** were observed at 7 locations.
 
-Next, I made a spaghetti plot that shows the number of locations in each state from 2002 to 2010.
+Then, I made a spaghetti plot that shows the number of locations in each state from 2002 to 2010.
 
 ```{r location_2002_2010, fig.width = 6, fig.asp = .6, out.width = "90%"}
 brfss_smart2010 %>% 
@@ -73,7 +73,7 @@ brfss_smart2010 %>%
 
 This spaghetti plot shows that from 2002 to 2010, the number of locations of state seems constant, slightly fluctuating below 20. However, this plot is not readable since many lines are overlapped. Thus, I re-plotted with a subset of some states whose maximum number of location is greater than 15.
 
-```{r location_2002_2010, fig.width = 6, fig.asp = .6, out.width = "90%"}
+```{r location_2002_2010_subset, fig.width = 6, fig.asp = .6, out.width = "90%"}
 brfss_smart2010 %>% 
   group_by(state, year) %>%
   distinct(location) %>%
@@ -103,7 +103,7 @@ From this plot, I can not only see that there was a surge in number of locations
 
 Also, I made a table showing, for the years 2002, 2006, and 2010, the mean and standard deviation of the proportion of “Excellent” responses across locations in NY State.
 
-```{r}
+```{r ex_table}
 brfss_smart2010 %>%
   filter(year %in% c(2002, 2006, 2010), 
          state == "NY", 
@@ -118,7 +118,7 @@ The average and deviation of the proportion of Excellent responses across locati
 
 For each year and state, I computed the average proportion in each response category (taking the average across locations in a state) and made a five-panel plot that shows, for each response category separately, the distribution of these state-level averages over time.
 
-```{r fig.width = 6, fig.asp = .6, out.width = "90%"}
+```{r response_five_panel, fig.width = 6, fig.asp = .6, out.width = "90%"}
 brfss_smart2010 %>% 
   group_by(year, state, response) %>% 
   summarize(mean_response = mean(data_value)) %>% 
@@ -135,7 +135,7 @@ brfss_smart2010 %>%
     name = "State",
     discrete = TRUE) +
   theme(plot.title = element_text(size = 12),
-        axis.text.x = element_text(angle = 45, size = 9),
+        axis.text.x = element_text(angle = 45, size = 6),
         strip.background = element_rect(fill = "black"),
         strip.text = element_text(color = "white", face = "bold"),
         legend.position = "none") 
@@ -175,7 +175,7 @@ From key variables such as `reordered`, `user_id`, `order_dow`, `order_hour_of_d
 
 * Fresh fruits and vegetables are reordered frequently. 
 
-```{r}
+```{r reorder}
 instacart %>% 
   group_by(aisle) %>% 
   filter(reordered == 1) %>%
@@ -185,7 +185,7 @@ instacart %>%
 
 * Orders tend to be made from 10 am to 5 pm. 
 
-```{r}
+```{r order_hour}
 instacart %>% 
   count(order_hour_of_day) %>% 
   arrange(desc(n))
@@ -193,12 +193,12 @@ instacart %>%
 
 * In general, 9 purchases were made per one person and 80 purchases at max.  
 
-```{r}
+```{r purchase_per_person}
 instacart %>% 
   count(user_id) %>% 
   summarize(order_max = max(n), 
-            order_median = median(n), 
             order_min = min(n),
+            order_median = median(n), 
             order_mean = round(mean(n), 1)) %>% 
   knitr::kable()
 ```
@@ -207,7 +207,7 @@ instacart %>%
 
 * The aisles below are the most items ordered from. 
 
-```{r}
+```{r popular_item}
 instacart %>% 
   count(aisle) %>% 
   top_n(3) %>% 
@@ -216,7 +216,7 @@ instacart %>%
 
 A plot below shows the number of items ordered in each aisle. 
 
-```{r fig.height = 10}
+```{r order_aisle, fig.height = 20}
 instacart %>%
   count(aisle) %>% 
   mutate(aisle = forcats::fct_reorder(aisle, n, .asc = TRUE)) %>% 
@@ -233,11 +233,11 @@ instacart %>%
   coord_flip()
 ```
 
-As shown above, fresh vegetables, fresh fruits and packaged vegetables fruits are the top 3 popular items. Beauty, frozen juice and baby accessories are the least purchased items. 
+As shown above, fresh vegetables, fresh fruits and packaged vegetables fruits are the top 3 popular items. Products such as beauty, frozen juice and baby accessories are the least purchased items. 
 
 Following table shows the most popular item in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”.
 
-```{r}
+```{r item_b_d_p}
 instacart %>%
   filter(aisle %in% c("baking ingredients", 
                       "dog food care", 
@@ -255,7 +255,7 @@ Light brown sugar, snack sticks chicken & rice recipe dog treats and organic bab
 
 A table below shows the mean hour of the day with the scale of 24-hour clock at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. For more readable table, I converted numeric `order_dow` variable to characteristic `days_of_the_week` variable in a way that from `0` to `6` to from `Sunday` to `Saturday`.
 
-```{r}
+```{r apple_icecream}
 dow_names = 
   c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
@@ -303,9 +303,28 @@ ny_noaa =
          tmin = as.numeric(tmin) / 10)
 ```
 
+In this dataset, `prcp`, `snow`, `snwd`, `tmax` and `tmin` can be key variables. However, this dataset has a lot of missing data so I calculated the proportion of missing data per each key variables. 
+
+```{r missing}
+ny_noaa %>%
+  summarise_at(vars(prcp:tmin), .funs = function(x) mean(is.na(x))) %>%
+  knitr::kable(digits = 2)
+```
+
+It is notable that a large proportion of data was not observed up to 44% per one column. I assumed that if data for months in summer/winter is missing, it will highly affect the result of precipitation and snowfall analysis. Therefore, I explored the proportion of missing data per month. 
+
+```{r missing_per_mo}
+ny_noaa %>%
+  group_by(month) %>%
+  summarise_at(vars(prcp:tmin), .funs = function(x) mean(is.na(x))) %>%
+  knitr::kable(digits = 2)
+```
+
+As shown above, missing data are well distributed in `prcp`, `tmax` and `tmin` variables over month but `snow` and `snwd` variables have more missing data in winter season in NY (November to February) which, in turn, means that the interpretation for snow data, especially, may not exactly correct. 
+
 The table below indicates 0 mm as the most frequently observed value of snowfall, implying that in most of days there are no snows in NY.
 
-```{r}
+```{r snowfall_count}
 ny_noaa %>%
   count(snow) %>%
   arrange(desc(n)) %>%
@@ -317,7 +336,7 @@ ny_noaa %>%
 
 Next, I made a two-panel plot showing the average max temperature in January and in July in each station across years. 
 
-```{r}
+```{r Jan_Jul_av_tmax}
 ny_noaa %>%
   filter(month %in% c("January", "July")) %>%
   group_by(id, year, month) %>%
@@ -325,9 +344,9 @@ ny_noaa %>%
   ggplot(aes(x = year, y = mean_tmax, group = id)) +
     geom_line(aes(color = id)) +
     labs(
-      title = "Average max temperature in January and in July in each station",
+      title = "Average max temperature in each station across years",
       x = "Year",
-      Y = "Maximum temperature(°C)"
+      y = "Maximum temperature(°C)"
     ) +
     facet_grid(~ month) +
   viridis::scale_color_viridis(
@@ -341,60 +360,38 @@ ny_noaa %>%
         legend.position = "none") 
 ```
 
-Since there are lots of overlapped lines which corresponding to one weather station ID,  
+As expected, maximum temperature is around 0°C in January and 27°C in July. Compared to 1980, the maximum temperature is getting higher, recently. This spaghetti plot makes it easy to read the trend of maximum temperature but since there are lots of overlapped lines which corresponding to one weather station ID, it is hard to distinguish station IDs. Some outliers are shown in both January and July. 
 
-```{r}
-ny_noaa %>%
-  filter(month %in% c("January", "July")) %>%
-  group_by(id, year, month) %>%
-  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>%
-  group_by(id, month) %>% 
-  mutate(min_mean_tmax = min(mean_tmax, na.rm = TRUE)) %>% 
-  filter((min_mean_tmax < 20 & month == "July") | 
-           (min_mean_tmax < -10 & month == "January") ) %>% 
-  ggplot(aes(x = year, y = mean_tmax, group = id)) +
-    geom_line(aes(color = id)) +
-    labs(
-      title = "Average max temperature in January and in July in each station",
-      x = "Year",
-      Y = "Maximum temperature(°C)"
-    ) +
-    facet_grid(~ month) +
-  viridis::scale_color_viridis(
-    name = "id",
-    discrete = TRUE
-    ) + 
-  theme(plot.title = element_text(size = 12),
-        axis.text.x = element_text(angle = 45, size = 10),
-        strip.background = element_rect(fill = "black"),
-        strip.text = element_text(color = "white", face = "bold")) 
-```
-Is there any observable / interpretable structure? Any outliers?
+The final plot is a two-panel plot showing (i) tmax vs tmin for the full dataset and (ii) distribution of snowfall values greater than 0 and less than 100 separately by year.
 
+```{r two_panel, fig.width = 6, fig.asp = .6, out.width = "90%"}
 
+library(patchwork)
 
-Finally, I made a two-panel plot showing
-
-(i) tmax vs tmin for the full dataset
-
-```{r fig.width = 6, fig.asp = .6, out.width = "90%"}
+## (i) tmax vs tmin for the full dataset
 library(hexbin)
 
-ny_noaa %>%
+tmax_tmin =
+  ny_noaa %>%
   filter(!is.na(tmax),
          !is.na(tmin)) %>%
   ggplot(aes(x = tmax, y = tmin)) +
   geom_hex() +
   labs(title = "Temperature from 1981-2010",
        x = "Maximum temperature(°C)",
-       y = "Minimum temperature(°C)")
-```
+       y = "Minimum temperature(°C)") +
+  viridis::scale_fill_viridis(
+    name = "Count") +
+  theme(plot.title = element_text(size = 9),
+        axis.title = element_text(size = 7),
+        legend.position = "bottom",
+        legend.key.width = unit(0.5, "in"),
+        legend.text = element_text(size = 5)) 
 
 
-(ii) Distribution of snowfall values greater than 0 and less than 100 separately by year.
-
-```{r fig.width = 6, fig.asp = .6, out.width = "90%"}
-ny_noaa %>%
+## (ii) distribution of snowfall values greater than 0 and less than 100 separately by year
+d_snow =
+  ny_noaa %>%
   filter(snow > 0, snow < 100) %>%
   ggplot(aes(x = snow, color = factor(year))) +
   geom_density() +
@@ -403,26 +400,18 @@ ny_noaa %>%
     y = "Density",
     title = "Distribution of snowfall, 0 ~ 100(mm)"
   ) +
-  theme(plot.title = element_text(size = 16),
-        legend.key.width = unit(.3, "cm"),
-        legend.text = element_text(size = 7)) +
-  guides(color = guide_legend(ncol = 15)) +
   viridis::scale_color_viridis(
     name = "Year",
-    discrete = TRUE)
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 9),
+        legend.position = "none",
+        axis.title = element_text(size = 7),
+        legend.text = element_text(size = 5)) 
+
+## Patch (i) and (ii)
+tmax_tmin + d_snow 
 ```
 
-To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and indicating the extent to which missing data is an issue. Then, do or answer the following (commenting on the results of each):
-
-```{r}
-ny_noaa %>%
-  summarise_at(vars(prcp:tmin), .funs = function(x) mean(is.na(x))) %>%
-  knitr::kable(digits = 2)
-
-ny_noaa %>%
-  group_by(month) %>%
-  summarise_at(vars(prcp:tmin), .funs = function(x) mean(is.na(x))) %>%
-  knitr::kable(digits = 2)
-```
-
+Left plot of this two-panel figure shows the joint distribution of maximum and minimum temperature. It tells us that most days have maximum 25°C and minimum 15°C temperature during 1981 - 2010. Also, the general temperature range in NY seems to be -15°C/0°C to 20°C/30°C.
+Right plot indicates that normal amount of snowfall is 0 ~ 25mm and sometimes NY have 50 and 75mm snowfall.  
 
